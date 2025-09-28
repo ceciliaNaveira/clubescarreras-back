@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: clubescarreras
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/clubesCarreras?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8
+    username: cecilia
+    password: 1234
+    hikari:
+      maximum-pool-size: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: none   # No modifica las tablas existentes
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
