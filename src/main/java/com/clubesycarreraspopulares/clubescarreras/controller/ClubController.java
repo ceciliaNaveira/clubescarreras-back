@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,8 +41,8 @@ public class ClubController {
     /** Crear un nuevo club */
     @Operation(summary = "Crear")
     @PostMapping
-    public ResponseEntity<ClubEntity> añadirClub(@RequestBody ClubEntity club) {
-        club.setIdClub(null);
+    public ResponseEntity<ClubEntity> crearClub(@RequestBody ClubEntity club) {
+        club.setIdClub(null); // para asegurar que se cree uno nuevo
         ClubEntity saved = clubRepository.save(club);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
@@ -59,6 +58,7 @@ public class ClubController {
         }
 
         club.setNombre(body.getNombre());
+        club.setDescripcion(body.getDescripcion());
         club.setContacto(body.getContacto());
         club.setWeb(body.getWeb());
         club.setLocalizacion(body.getLocalizacion());
@@ -71,7 +71,7 @@ public class ClubController {
     @Operation(summary = "Eliminar por id")
     @DeleteMapping("/{idClub}")
     public ResponseEntity<Void> eliminarClub(@PathVariable Integer idClub) {
-        if (Boolean.FALSE.equals(clubRepository.existsById(idClub))) {
+        if (!clubRepository.existsById(idClub)) {
             return ResponseEntity.notFound().build();
         }
         clubRepository.deleteById(idClub);
@@ -79,19 +79,18 @@ public class ClubController {
     }
 
     /** Buscar clubes por filtros opcionales */
-    @Operation(summary = "Buscar por nombre, provincia, municipio, código postal o fecha de entrenamiento")
+    @Operation(summary = "Buscar por nombre, provincia, municipio, código postal o día de la semana")
     @GetMapping("/buscar")
-    public ResponseEntity<List<ClubEntity>> buscarClub(
+    public ResponseEntity<List<ClubEntity>> buscarClubes(
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) String provincia,
             @RequestParam(required = false) String municipio,
             @RequestParam(required = false) String codigoPostal,
-            @RequestParam(required = false) LocalDateTime fechaEntrenamiento) {
-
+            @RequestParam(required = false) String diaSemana
+    ) {
         List<ClubEntity> resultados = clubRepository.buscarPorFiltros(
-                nombre, provincia, municipio, codigoPostal, fechaEntrenamiento
+                nombre, provincia, municipio, codigoPostal, diaSemana
         );
-
         return ResponseEntity.ok(resultados);
     }
 }

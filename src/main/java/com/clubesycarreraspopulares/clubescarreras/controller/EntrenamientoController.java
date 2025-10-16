@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -59,7 +58,7 @@ public class EntrenamientoController {
         }
 
         entrenamiento.setClub(body.getClub());
-        entrenamiento.setFecha(body.getFecha());
+        entrenamiento.setDiaSemana(body.getDiaSemana());
         entrenamiento.setLugarEntrenamiento(body.getLugarEntrenamiento());
         entrenamiento.setNivel(body.getNivel());
         entrenamiento.setDescripcion(body.getDescripcion());
@@ -72,7 +71,7 @@ public class EntrenamientoController {
     @Operation(summary = "Eliminar por id")
     @DeleteMapping("/{idEntrenamiento}")
     public ResponseEntity<Void> eliminarEntrenamiento(@PathVariable Integer idEntrenamiento) {
-        if (Boolean.FALSE.equals(entrenamientoRepository.existsById(idEntrenamiento))) {
+        if (!entrenamientoRepository.existsById(idEntrenamiento)) {
             return ResponseEntity.notFound().build();
         }
         entrenamientoRepository.deleteById(idEntrenamiento);
@@ -80,16 +79,16 @@ public class EntrenamientoController {
     }
 
     /** Buscar entrenamientos por filtros opcionales */
-    @Operation(summary = "Buscar por fecha, provincia, municipio o código postal")
+    @Operation(summary = "Buscar por día de la semana, provincia, municipio o código postal")
     @GetMapping("/buscar")
     public ResponseEntity<List<EntrenamientoEntity>> buscarEntrenamiento(
-            @RequestParam(required = false) LocalDateTime fecha,
+            @RequestParam(required = false) String diaSemana,
             @RequestParam(required = false) String provincia,
             @RequestParam(required = false) String municipio,
             @RequestParam(required = false) String codigoPostal) {
 
         List<EntrenamientoEntity> resultados =
-                entrenamientoRepository.buscarPorFiltros(fecha, provincia, municipio, codigoPostal);
+                entrenamientoRepository.buscarPorFiltros(diaSemana, provincia, municipio, codigoPostal);
 
         return ResponseEntity.ok(resultados);
     }
