@@ -13,66 +13,84 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+@AllArgsConstructor
 @RestController
 @RequestMapping("/entrenamientos")
-@AllArgsConstructor
 @Tag(name = "Entrenamiento", description = "Endpoints para la entidad Entrenamiento")
 public class EntrenamientoController {
 
     private final EntrenamientoRepository entrenamientoRepository;
 
+    /** Listar todos los entrenamientos */
     @Operation(summary = "Listar todos")
     @GetMapping
-    public ResponseEntity<List<EntrenamientoEntity>> obtenerTodos() {
+    public ResponseEntity<List<EntrenamientoEntity>> obtenerTodosLosEntrenamientos() {
         return ResponseEntity.ok(entrenamientoRepository.findAll());
     }
 
+    /** Obtener un entrenamiento por ID */
     @Operation(summary = "Obtener por id")
-    @GetMapping("/{id}")
-    public ResponseEntity<EntrenamientoEntity> obtenerPorId(@PathVariable Integer id) {
-        EntrenamientoEntity e = entrenamientoRepository.findById(id).orElse(null);
-        if (Objects.isNull(e)) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(e);
+    @GetMapping("/{idEntrenamiento}")
+    public ResponseEntity<EntrenamientoEntity> obtenerEntrenamientoById(@PathVariable Integer idEntrenamiento) {
+        EntrenamientoEntity entrenamiento = entrenamientoRepository.findById(idEntrenamiento).orElse(null);
+        if (Objects.isNull(entrenamiento)) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(entrenamiento);
     }
 
-    @Operation(summary = "Crear nuevo")
+    /** Crear un nuevo entrenamiento */
+    @Operation(summary = "Crear")
     @PostMapping
-    public ResponseEntity<EntrenamientoEntity> crear(@RequestBody EntrenamientoEntity e) {
-        e.setIdEntrenamiento(null);
-        EntrenamientoEntity saved = entrenamientoRepository.save(e);
+    public ResponseEntity<EntrenamientoEntity> añadirEntrenamiento(@RequestBody EntrenamientoEntity entrenamiento) {
+        entrenamiento.setIdEntrenamiento(null);
+        EntrenamientoEntity saved = entrenamientoRepository.save(entrenamiento);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
+    /** Actualizar un entrenamiento existente */
     @Operation(summary = "Actualizar por id")
-    @PutMapping("/{id}")
-    public ResponseEntity<EntrenamientoEntity> actualizar(@PathVariable Integer id,
-                                                          @RequestBody EntrenamientoEntity body) {
-        EntrenamientoEntity e = entrenamientoRepository.findById(id).orElse(null);
-        if (Objects.isNull(e)) return ResponseEntity.notFound().build();
+    @PutMapping("/{idEntrenamiento}")
+    public ResponseEntity<EntrenamientoEntity> actualizarEntrenamiento(@PathVariable Integer idEntrenamiento,
+                                                                       @RequestBody EntrenamientoEntity body) {
+        EntrenamientoEntity entrenamiento = entrenamientoRepository.findById(idEntrenamiento).orElse(null);
+        if (Objects.isNull(entrenamiento)) {
+            return ResponseEntity.notFound().build();
+        }
 
-        e.setClub(body.getClub());
-        e.setFecha(body.getFecha());
-        e.setLugarEntrenamiento(body.getLugarEntrenamiento());
-        e.setNivel(body.getNivel());
-        e.setDescripcion(body.getDescripcion());
+        entrenamiento.setClub(body.getClub());
+        entrenamiento.setFecha(body.getFecha());
+        entrenamiento.setLugarEntrenamiento(body.getLugarEntrenamiento());
+        entrenamiento.setNivel(body.getNivel());
+        entrenamiento.setDescripcion(body.getDescripcion());
 
-        EntrenamientoEntity updated = entrenamientoRepository.save(e);
+        EntrenamientoEntity updated = entrenamientoRepository.save(entrenamiento);
         return ResponseEntity.ok(updated);
     }
 
+    /** Eliminar un entrenamiento por ID */
     @Operation(summary = "Eliminar por id")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
-        if (!entrenamientoRepository.existsById(id)) return ResponseEntity.notFound().build();
-        entrenamientoRepository.deleteById(id);
+    @DeleteMapping("/{idEntrenamiento}")
+    public ResponseEntity<Void> eliminarEntrenamiento(@PathVariable Integer idEntrenamiento) {
+        if (Boolean.FALSE.equals(entrenamientoRepository.existsById(idEntrenamiento))) {
+            return ResponseEntity.notFound().build();
+        }
+        entrenamientoRepository.deleteById(idEntrenamiento);
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Buscar por fecha")
+    /** Buscar entrenamientos por filtros opcionales */
+    @Operation(summary = "Buscar por fecha, provincia, municipio o código postal")
     @GetMapping("/buscar")
-    public ResponseEntity<List<EntrenamientoEntity>> buscarPorFecha(
-            @RequestParam(required = false) LocalDateTime fecha) {
-        if (fecha != null) return ResponseEntity.ok(entrenamientoRepository.findByFecha(fecha));
-        return ResponseEntity.ok(entrenamientoRepository.findAll());
+    public ResponseEntity<List<EntrenamientoEntity>> buscarEntrenamiento(
+            @RequestParam(required = false) LocalDateTime fecha,
+            @RequestParam(required = false) String provincia,
+            @RequestParam(required = false) String municipio,
+            @RequestParam(required = false) String codigoPostal) {
+
+        List<EntrenamientoEntity> resultados =
+                entrenamientoRepository.buscarPorFiltros(fecha, provincia, municipio, codigoPostal);
+
+        return ResponseEntity.ok(resultados);
     }
 }
