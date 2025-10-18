@@ -9,8 +9,6 @@ import java.util.List;
 
 @Repository
 public interface FavoritoCarreraRepository extends JpaRepository<FavoritoCarreraEntity, FavoritoCarreraId> {
-
-    List<FavoritoCarreraEntity> findByUsuarioIdUsuario(Integer idUsuario);
-
-    List<FavoritoCarreraEntity> findByCarreraIdCarrera(Integer idCarrera);
+    List<FavoritoCarreraEntity> findByUsuario_UsuarioId(Integer usuarioId);
+    List<FavoritoCarreraEntity> findByCarrera_Id(Integer carreraId);
 }

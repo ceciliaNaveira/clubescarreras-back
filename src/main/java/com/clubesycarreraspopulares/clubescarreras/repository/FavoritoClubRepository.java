@@ -9,10 +9,6 @@ import java.util.List;
 
 @Repository
 public interface FavoritoClubRepository extends JpaRepository<FavoritoClubEntity, FavoritoClubId> {
-
-    // Buscar favoritos de un usuario
-    List<FavoritoClubEntity> findByUsuarioIdUsuario(Integer idUsuario);
-
-    // Buscar usuarios que tienen un club favorito
-    List<FavoritoClubEntity> findByClubIdClub(Integer idClub);
+    List<FavoritoClubEntity> findByUsuario_UsuarioId(Integer usuarioId);
+    List<FavoritoClubEntity> findByClub_ClubId(Integer clubId);
 }

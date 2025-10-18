@@ -1,13 +1,21 @@
 package com.clubesycarreraspopulares.clubescarreras.controller;
 
+import com.clubesycarreraspopulares.clubescarreras.dto.CarreraRequest;
+import com.clubesycarreraspopulares.clubescarreras.dto.CarreraResponse;
 import com.clubesycarreraspopulares.clubescarreras.entities.CarreraEntity;
+import com.clubesycarreraspopulares.clubescarreras.entities.ClubEntity;
+import com.clubesycarreraspopulares.clubescarreras.entities.LocalizacionEntity;
+import com.clubesycarreraspopulares.clubescarreras.mapper.CarreraMapper;
 import com.clubesycarreraspopulares.clubescarreras.repository.CarreraRepository;
+import com.clubesycarreraspopulares.clubescarreras.repository.ClubRepository;
+import com.clubesycarreraspopulares.clubescarreras.repository.LocalizacionRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,111 +24,129 @@ import java.util.Objects;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/carreras")
-@Tag(name = "Carrera", description = "Endpoints para la entidad Carrera")
+@Tag(name = "Carrera", description = "Endpoints para gestionar carreras")
 public class CarreraController {
 
     private final CarreraRepository carreraRepository;
+    private final LocalizacionRepository localizacionRepository;
+    private final ClubRepository clubRepository;
+    private final CarreraMapper carreraMapper;
 
-    /** Listar todas las carreras */
-    @Operation(summary = "Listar todas")
+    @Operation(summary = "Listar todas las carreras")
     @GetMapping
-    public ResponseEntity<List<CarreraEntity>> obtenerTodasLasCarreras() {
-        return ResponseEntity.ok(carreraRepository.findAll());
+    public ResponseEntity<List<CarreraResponse>> obtenerTodas() {
+        List<CarreraResponse> response = carreraRepository.findAll()
+                .stream()
+                .map(carreraMapper::fromEntityToDTO)
+                .toList();
+        return ResponseEntity.ok(response);
     }
 
-    /** Obtener una carrera por ID */
-    @Operation(summary = "Obtener por id")
-    @GetMapping("/{idCarrera}")
-    public ResponseEntity<CarreraEntity> obtenerCarreraById(@PathVariable Integer idCarrera) {
-        CarreraEntity carrera = carreraRepository.findById(idCarrera).orElse(null);
+    @Operation(summary = "Obtener una carrera por ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<CarreraResponse> obtenerPorId(@PathVariable Integer id) {
+        CarreraEntity carrera = carreraRepository.findById(id).orElse(null);
         if (Objects.isNull(carrera)) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(carrera);
+        return ResponseEntity.ok(carreraMapper.fromEntityToDTO(carrera));
     }
 
-    /** Crear una nueva carrera */
-    @Operation(summary = "Crear")
+    @Operation(summary = "Crear una nueva carrera")
     @PostMapping
-    public ResponseEntity<CarreraEntity> añadirCarrera(@RequestBody CarreraEntity carrera) {
-        carrera.setIdCarrera(null); // Ignorar el ID si viene en el JSON
-        CarreraEntity saved = carreraRepository.save(carrera);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<CarreraResponse> crear(@RequestBody CarreraRequest request) {
+        LocalizacionEntity localizacion = localizacionRepository.findById(request.getLocalizacionId()).orElse(null);
+        if (Objects.isNull(localizacion)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La localización no existe.");
+        }
+
+        ClubEntity club = null;
+        if (request.getClubId() != null) {
+            club = clubRepository.findById(request.getClubId()).orElse(null);
+            if (Objects.isNull(club)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El club no existe.");
+            }
+        }
+
+        CarreraEntity toSave = carreraMapper.fromDtoRequestToEntity(request);
+        toSave.setLocalizacion(localizacion);
+        toSave.setClub(club);
+
+        CarreraEntity saved = carreraRepository.save(toSave);
+        return ResponseEntity.status(HttpStatus.CREATED).body(carreraMapper.fromEntityToDTO(saved));
     }
 
-    /** Actualizar una carrera existente */
-    @Operation(summary = "Actualizar por id")
-    @PutMapping("/{idCarrera}")
-    public ResponseEntity<CarreraEntity> actualizarCarrera(@PathVariable Integer idCarrera,
-                                                           @RequestBody CarreraEntity body) {
-        CarreraEntity carrera = carreraRepository.findById(idCarrera).orElse(null);
+    @Operation(summary = "Actualizar una carrera existente")
+    @PutMapping("/{id}")
+    public ResponseEntity<CarreraResponse> actualizar(@PathVariable Integer id,
+                                                      @RequestBody CarreraRequest request) {
+        CarreraEntity carrera = carreraRepository.findById(id).orElse(null);
         if (Objects.isNull(carrera)) {
             return ResponseEntity.notFound().build();
         }
 
-        // Actualizar campos
-        carrera.setNombre(body.getNombre());
-        carrera.setDescripcion(body.getDescripcion());
-        carrera.setFecha(body.getFecha());
-        carrera.setDistanciaKm(body.getDistanciaKm());
-        carrera.setWebOficial(body.getWebOficial());
-        carrera.setPosterUrl(body.getPosterUrl());
-        carrera.setClub(body.getClub());
-        carrera.setLocalizacion(body.getLocalizacion());
+        if (request.getLocalizacionId() != null) {
+            LocalizacionEntity localizacion = localizacionRepository.findById(request.getLocalizacionId()).orElse(null);
+            if (Objects.isNull(localizacion)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La localización no existe.");
+            }
+            carrera.setLocalizacion(localizacion);
+        }
+
+        if (request.getClubId() != null) {
+            ClubEntity club = clubRepository.findById(request.getClubId()).orElse(null);
+            if (Objects.isNull(club)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El club no existe.");
+            }
+            carrera.setClub(club);
+        } else {
+            carrera.setClub(null);
+        }
+
+        carrera.setNombre(request.getNombre());
+        carrera.setDescripcion(request.getDescripcion());
+        carrera.setFecha(request.getFecha());
+        carrera.setDistanciaKm(request.getDistanciaKm());
+        carrera.setWebOficial(request.getWebOficial());
+        carrera.setPosterUrl(request.getPosterUrl());
 
         CarreraEntity updated = carreraRepository.save(carrera);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(carreraMapper.fromEntityToDTO(updated));
     }
 
-    /** Eliminar una carrera por ID */
-    @Operation(summary = "Eliminar por id")
-    @DeleteMapping("/{idCarrera}")
-    public ResponseEntity<Void> eliminarCarrera(@PathVariable Integer idCarrera) {
-        if (!carreraRepository.existsById(idCarrera)) {
+    @Operation(summary = "Eliminar una carrera por ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+        if (Boolean.FALSE.equals(carreraRepository.existsById(id))) {
             return ResponseEntity.notFound().build();
         }
-        carreraRepository.deleteById(idCarrera);
+        carreraRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
-    /** Buscar carreras por varios filtros */
-    @Operation(summary = "Buscar por filtros")
+    @Operation(summary = "Buscar carreras por filtros opcionales")
     @GetMapping("/buscar")
-    public ResponseEntity<List<CarreraEntity>> buscarCarreras(
-            @RequestParam(required = false) String nombre,
-            @RequestParam(required = false) LocalDate fecha,
-            @RequestParam(required = false) Double distancia,
-            @RequestParam(required = false) Double distanciaMin,
-            @RequestParam(required = false) Double distanciaMax,
-            @RequestParam(required = false) String codigoPostal,
-            @RequestParam(required = false) String municipio,
-            @RequestParam(required = false) String provincia,
-            @RequestParam(required = false) Integer idClub
-    ) {
-        // Puedes crear lógicas combinadas o llamar a métodos específicos según el filtro que venga
-        // Aquí un ejemplo simple llamando al método por nombre si se pasa nombre
-        List<CarreraEntity> resultados;
+    public ResponseEntity<List<CarreraResponse>> buscar(@RequestParam(required = false) String nombre,
+                                                        @RequestParam(required = false) Integer clubId,
+                                                        @RequestParam(required = false) Integer localizacionId,
+                                                        @RequestParam(required = false) LocalDate fechaInicio,
+                                                        @RequestParam(required = false) LocalDate fechaFin) {
+        List<CarreraEntity> results = carreraRepository.findAll();
 
         if (nombre != null) {
-            resultados = carreraRepository.findByNombre(nombre);
-        } else if (fecha != null) {
-            resultados = carreraRepository.findByFecha(fecha);
-        } else if (distancia != null) {
-            resultados = carreraRepository.findByDistancia(distancia);
-        } else if (distanciaMin != null && distanciaMax != null) {
-            resultados = carreraRepository.findByRangoDistancia(distanciaMin, distanciaMax);
-        } else if (codigoPostal != null) {
-            resultados = carreraRepository.findByCodigoPostal(codigoPostal);
-        } else if (municipio != null) {
-            resultados = carreraRepository.findByMunicipio(municipio);
-        } else if (provincia != null) {
-            resultados = carreraRepository.findByProvincia(provincia);
-        } else if (idClub != null) {
-            resultados = carreraRepository.findByClub(idClub);
-        } else {
-            resultados = carreraRepository.findAll();
+            results = carreraRepository.findByNombreContainingIgnoreCase(nombre);
+        } else if (clubId != null) {
+            results = carreraRepository.findByClub_ClubId(clubId);
+        } else if (localizacionId != null) {
+            results = carreraRepository.findByLocalizacion_LocalizacionId(localizacionId);
+        } else if (fechaInicio != null && fechaFin != null) {
+            results = carreraRepository.findByFechaBetween(fechaInicio, fechaFin);
         }
 
-        return ResponseEntity.ok(resultados);
+        List<CarreraResponse> response = results.stream()
+                .map(carreraMapper::fromEntityToDTO)
+                .toList();
+
+        return ResponseEntity.ok(response);
     }
 }

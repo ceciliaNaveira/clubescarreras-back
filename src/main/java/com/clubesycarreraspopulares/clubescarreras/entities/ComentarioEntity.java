@@ -1,36 +1,38 @@
 package com.clubesycarreraspopulares.clubescarreras.entities;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 @Entity
-@Table(name = "Comentario")
+@Table(name = "comentario", schema = "dbo")
 public class ComentarioEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_comentario")
-    private Integer idComentario;
+    @Column(name = "id_comentario", nullable = false, unique = true)
+    private Integer comentarioId;
 
-    // Relación con Usuario
     @ManyToOne
     @JoinColumn(name = "id_usuario", nullable = false)
     private UsuarioEntity usuario;
 
-    // Relación con Club
     @ManyToOne
     @JoinColumn(name = "id_club", nullable = false)
     private ClubEntity club;
 
-    @Column(name = "texto", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "texto", columnDefinition = "TEXT", nullable = false)
     private String texto;
 
-    @Column(name = "fecha")
+    @Column(name = "fecha", nullable = false)
     private LocalDateTime fecha;
 
-    @Column(name = "valoracion")
-    private Byte valoracion;
+    @Column(name = "valoracion", nullable = false)
+    private Integer valoracion; // 1 a 5
 }

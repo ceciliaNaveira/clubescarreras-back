@@ -1,12 +1,16 @@
 package com.clubesycarreraspopulares.clubescarreras.entities;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 @Entity
-@Table(name = "Favorito_Club")
-@IdClass(FavoritoClubId.class) // Clase que representa la clave compuesta
+@Table(name = "favorito_club", schema = "dbo")
+@IdClass(FavoritoClubId.class)
 public class FavoritoClubEntity {
 
     @Id

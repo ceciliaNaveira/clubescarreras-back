@@ -1,13 +1,19 @@
 package com.clubesycarreraspopulares.clubescarreras.controller;
 
+import com.clubesycarreraspopulares.clubescarreras.dto.ClubRequest;
+import com.clubesycarreraspopulares.clubescarreras.dto.ClubResponse;
 import com.clubesycarreraspopulares.clubescarreras.entities.ClubEntity;
+import com.clubesycarreraspopulares.clubescarreras.entities.LocalizacionEntity;
+import com.clubesycarreraspopulares.clubescarreras.mapper.ClubMapper;
 import com.clubesycarreraspopulares.clubescarreras.repository.ClubRepository;
+import com.clubesycarreraspopulares.clubescarreras.repository.LocalizacionRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Objects;
@@ -15,82 +21,91 @@ import java.util.Objects;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/clubes")
-@Tag(name = "Club", description = "Endpoints para la entidad Club")
+@Tag(name = "Club", description = "Endpoints para gestionar clubes")
 public class ClubController {
 
     private final ClubRepository clubRepository;
+    private final LocalizacionRepository localizacionRepository;
+    private final ClubMapper clubMapper;
 
-    /** Listar todos los clubes */
-    @Operation(summary = "Listar todos")
+    @Operation(summary = "Listar todos los clubes")
     @GetMapping
-    public ResponseEntity<List<ClubEntity>> obtenerTodosLosClubes() {
-        return ResponseEntity.ok(clubRepository.findAll());
+    public ResponseEntity<List<ClubResponse>> obtenerTodos() {
+        List<ClubResponse> response = clubRepository.findAll()
+                .stream()
+                .map(clubMapper::fromEntityToDTO)
+                .toList();
+        return ResponseEntity.ok(response);
     }
 
-    /** Obtener un club por ID */
-    @Operation(summary = "Obtener por id")
-    @GetMapping("/{idClub}")
-    public ResponseEntity<ClubEntity> obtenerClubById(@PathVariable Integer idClub) {
-        ClubEntity club = clubRepository.findById(idClub).orElse(null);
+    @Operation(summary = "Obtener un club por ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<ClubResponse> obtenerPorId(@PathVariable Integer id) {
+        ClubEntity club = clubRepository.findById(id).orElse(null);
         if (Objects.isNull(club)) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(club);
+        return ResponseEntity.ok(clubMapper.fromEntityToDTO(club));
     }
 
-    /** Crear un nuevo club */
-    @Operation(summary = "Crear")
+    @Operation(summary = "Crear un nuevo club")
     @PostMapping
-    public ResponseEntity<ClubEntity> crearClub(@RequestBody ClubEntity club) {
-        club.setIdClub(null); // para asegurar que se cree uno nuevo
-        ClubEntity saved = clubRepository.save(club);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<ClubResponse> crear(@RequestBody ClubRequest request) {
+        LocalizacionEntity localizacion = localizacionRepository.findById(request.getLocalizacionId()).orElse(null);
+        if (Objects.isNull(localizacion)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La localización no existe.");
+        }
+
+        ClubEntity toSave = clubMapper.fromDtoRequestToEntity(request);
+        toSave.setLocalizacion(localizacion);
+
+        ClubEntity saved = clubRepository.save(toSave);
+        return ResponseEntity.status(HttpStatus.CREATED).body(clubMapper.fromEntityToDTO(saved));
     }
 
-    /** Actualizar un club existente */
-    @Operation(summary = "Actualizar por id")
-    @PutMapping("/{idClub}")
-    public ResponseEntity<ClubEntity> actualizarClub(@PathVariable Integer idClub,
-                                                     @RequestBody ClubEntity body) {
-        ClubEntity club = clubRepository.findById(idClub).orElse(null);
+    @Operation(summary = "Actualizar un club existente")
+    @PutMapping("/{id}")
+    public ResponseEntity<ClubResponse> actualizar(@PathVariable Integer id,
+                                                   @RequestBody ClubRequest request) {
+        ClubEntity club = clubRepository.findById(id).orElse(null);
         if (Objects.isNull(club)) {
             return ResponseEntity.notFound().build();
         }
 
-        club.setNombre(body.getNombre());
-        club.setDescripcion(body.getDescripcion());
-        club.setContacto(body.getContacto());
-        club.setWeb(body.getWeb());
-        club.setLocalizacion(body.getLocalizacion());
+        if (request.getLocalizacionId() != null) {
+            LocalizacionEntity localizacion = localizacionRepository.findById(request.getLocalizacionId()).orElse(null);
+            if (Objects.isNull(localizacion)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La localización no existe.");
+            }
+            club.setLocalizacion(localizacion);
+        }
+
+        club.setNombre(request.getNombre());
+        club.setDescripcion(request.getDescripcion());
+        club.setContacto(request.getContacto());
+        club.setWeb(request.getWeb());
 
         ClubEntity updated = clubRepository.save(club);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(clubMapper.fromEntityToDTO(updated));
     }
 
-    /** Eliminar un club por ID */
-    @Operation(summary = "Eliminar por id")
-    @DeleteMapping("/{idClub}")
-    public ResponseEntity<Void> eliminarClub(@PathVariable Integer idClub) {
-        if (!clubRepository.existsById(idClub)) {
+    @Operation(summary = "Eliminar un club por ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+        if (Boolean.FALSE.equals(clubRepository.existsById(id))) {
             return ResponseEntity.notFound().build();
         }
-        clubRepository.deleteById(idClub);
+        clubRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
-    /** Buscar clubes por filtros opcionales */
-    @Operation(summary = "Buscar por nombre, provincia, municipio, código postal o día de la semana")
+    @Operation(summary = "Buscar clubes por nombre")
     @GetMapping("/buscar")
-    public ResponseEntity<List<ClubEntity>> buscarClubes(
-            @RequestParam(required = false) String nombre,
-            @RequestParam(required = false) String provincia,
-            @RequestParam(required = false) String municipio,
-            @RequestParam(required = false) String codigoPostal,
-            @RequestParam(required = false) String diaSemana
-    ) {
-        List<ClubEntity> resultados = clubRepository.buscarPorFiltros(
-                nombre, provincia, municipio, codigoPostal, diaSemana
-        );
-        return ResponseEntity.ok(resultados);
+    public ResponseEntity<List<ClubResponse>> buscar(@RequestParam String nombre) {
+        List<ClubResponse> response = clubRepository.findByNombreContainingIgnoreCase(nombre)
+                .stream()
+                .map(clubMapper::fromEntityToDTO)
+                .toList();
+        return ResponseEntity.ok(response);
     }
 }

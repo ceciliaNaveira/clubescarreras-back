@@ -1,6 +1,9 @@
 package com.clubesycarreraspopulares.clubescarreras.controller;
 
+import com.clubesycarreraspopulares.clubescarreras.dto.LocalizacionRequest;
+import com.clubesycarreraspopulares.clubescarreras.dto.LocalizacionResponse;
 import com.clubesycarreraspopulares.clubescarreras.entities.LocalizacionEntity;
+import com.clubesycarreraspopulares.clubescarreras.mapper.LocalizacionMapper;
 import com.clubesycarreraspopulares.clubescarreras.repository.LocalizacionRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -8,93 +11,98 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Controller para la entidad Localizacion.
- * Expone los endpoints REST para CRUD y búsquedas.
- */
 @AllArgsConstructor
 @RestController
 @RequestMapping("/localizaciones")
-@Tag(name = "Localizacion", description = "Endpoints para la entidad Localizacion")
+@Tag(name = "Localizacion", description = "Endpoints para gestionar localizaciones")
 public class LocalizacionController {
 
     private final LocalizacionRepository localizacionRepository;
+    private final LocalizacionMapper localizacionMapper;
 
-    /** Listar todas las localizaciones */
-    @Operation(summary = "Listar todas")
+    @Operation(summary = "Listar todas las localizaciones")
     @GetMapping
-    public ResponseEntity<List<LocalizacionEntity>> obtenerTodasLasLocalizaciones() {
-        return ResponseEntity.ok(localizacionRepository.findAll());
+    public ResponseEntity<List<LocalizacionResponse>> obtenerTodas() {
+        List<LocalizacionResponse> response = localizacionRepository.findAll()
+                .stream()
+                .map(localizacionMapper::fromEntityToDTO)
+                .toList();
+        return ResponseEntity.ok(response);
     }
 
-    /** Obtener una localización por ID */
-    @Operation(summary = "Obtener por id")
-    @GetMapping("/{idLocalizacion}")
-    public ResponseEntity<LocalizacionEntity> obtenerLocalizacionById(@PathVariable Integer idLocalizacion) {
-        LocalizacionEntity localizacionEntity = localizacionRepository.findById(idLocalizacion).orElse(null);
-        if (Objects.isNull(localizacionEntity)) {
+    @Operation(summary = "Obtener una localización por ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<LocalizacionResponse> obtenerPorId(@PathVariable Integer id) {
+        LocalizacionEntity entity = localizacionRepository.findById(id).orElse(null);
+        if (Objects.isNull(entity)) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(localizacionEntity);
+        return ResponseEntity.ok(localizacionMapper.fromEntityToDTO(entity));
     }
 
-    /** Crear una nueva localización */
-    @Operation(summary = "Crear")
+    @Operation(summary = "Crear una nueva localización")
     @PostMapping
-    public ResponseEntity<LocalizacionEntity> añadirLocalizacion(@RequestBody LocalizacionEntity localizacionEntity) {
-        // Ignorar el ID que venga en el JSON, ya que es autogenerado
-        localizacionEntity.setIdLocalizacion(null);
-        LocalizacionEntity saved = localizacionRepository.save(localizacionEntity);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<LocalizacionResponse> crear(@RequestBody LocalizacionRequest request) {
+        if (Objects.isNull(request) || Objects.isNull(request.getProvincia()) || Objects.isNull(request.getMunicipio())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Provincia y municipio son obligatorios.");
+        }
+        LocalizacionEntity saved = localizacionRepository.save(localizacionMapper.fromDtoRequestToEntity(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(localizacionMapper.fromEntityToDTO(saved));
     }
 
-    /** Actualizar una localización existente */
-    @Operation(summary = "Actualizar por id")
-    @PutMapping("/{idLocalizacion}")
-    public ResponseEntity<LocalizacionEntity> actualizarLocalizacion(@PathVariable Integer idLocalizacion,
-                                                                     @RequestBody LocalizacionEntity body) {
-        LocalizacionEntity localizacionEntity = localizacionRepository.findById(idLocalizacion).orElse(null);
-        if (Objects.isNull(localizacionEntity)) {
+    @Operation(summary = "Actualizar una localización existente")
+    @PutMapping("/{id}")
+    public ResponseEntity<LocalizacionResponse> actualizar(@PathVariable Integer id,
+                                                           @RequestBody LocalizacionRequest request) {
+        LocalizacionEntity entity = localizacionRepository.findById(id).orElse(null);
+        if (Objects.isNull(entity)) {
             return ResponseEntity.notFound().build();
         }
 
-        // Actualizar campos
-        localizacionEntity.setProvincia(body.getProvincia());
-        localizacionEntity.setMunicipio(body.getMunicipio());
-        localizacionEntity.setCodigoPostal(body.getCodigoPostal());
-        localizacionEntity.setDireccion(body.getDireccion());
-        localizacionEntity.setLatitud(body.getLatitud());
-        localizacionEntity.setLongitud(body.getLongitud());
+        entity.setProvincia(request.getProvincia());
+        entity.setMunicipio(request.getMunicipio());
+        entity.setCodigoPostal(request.getCodigoPostal());
+        entity.setDireccion(request.getDireccion());
+        entity.setLatitud(request.getLatitud());
+        entity.setLongitud(request.getLongitud());
 
-        LocalizacionEntity updated = localizacionRepository.save(localizacionEntity);
-        return ResponseEntity.ok(updated);
+        LocalizacionEntity updated = localizacionRepository.save(entity);
+        return ResponseEntity.ok(localizacionMapper.fromEntityToDTO(updated));
     }
 
-    /** Eliminar una localización por ID */
-    @Operation(summary = "Eliminar por id")
-    @DeleteMapping("/{idLocalizacion}")
-    public ResponseEntity<Void> eliminarLocalizacion(@PathVariable Integer idLocalizacion) {
-        if (Boolean.FALSE.equals(localizacionRepository.existsById(idLocalizacion))) {
+    @Operation(summary = "Eliminar una localización por ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+        if (Boolean.FALSE.equals(localizacionRepository.existsById(id))) {
             return ResponseEntity.notFound().build();
         }
-        localizacionRepository.deleteById(idLocalizacion);
+        localizacionRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
-    /** Buscar localizaciones por provincia y/o municipio */
-    @Operation(summary = "Buscar por provincia y/o municipio")
+    @Operation(summary = "Buscar localizaciones por provincia o municipio")
     @GetMapping("/buscar")
-    public ResponseEntity<List<LocalizacionEntity>> buscarLocalizacionPorProvinciaMunicipio(
-            @RequestParam(required = false) String provincia,
-            @RequestParam(required = false) String municipio) {
+    public ResponseEntity<List<LocalizacionResponse>> buscar(@RequestParam(required = false) String provincia,
+                                                             @RequestParam(required = false) String municipio) {
+        List<LocalizacionEntity> results;
 
-        List<LocalizacionEntity> resultados =
-                localizacionRepository.findByProvinciaAndMunicipio(provincia, municipio);
-        return ResponseEntity.ok(resultados);
+        if (provincia != null) {
+            results = localizacionRepository.findByProvinciaContainingIgnoreCase(provincia);
+        } else if (municipio != null) {
+            results = localizacionRepository.findByMunicipioContainingIgnoreCase(municipio);
+        } else {
+            results = localizacionRepository.findAll();
+        }
+
+        List<LocalizacionResponse> response = results.stream()
+                .map(localizacionMapper::fromEntityToDTO)
+                .toList();
+
+        return ResponseEntity.ok(response);
     }
 }
-

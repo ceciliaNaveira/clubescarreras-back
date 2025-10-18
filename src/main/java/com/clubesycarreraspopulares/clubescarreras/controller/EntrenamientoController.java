@@ -1,13 +1,19 @@
 package com.clubesycarreraspopulares.clubescarreras.controller;
 
+import com.clubesycarreraspopulares.clubescarreras.dto.EntrenamientoRequest;
+import com.clubesycarreraspopulares.clubescarreras.dto.EntrenamientoResponse;
 import com.clubesycarreraspopulares.clubescarreras.entities.EntrenamientoEntity;
+import com.clubesycarreraspopulares.clubescarreras.entities.ClubEntity;
+import com.clubesycarreraspopulares.clubescarreras.mapper.EntrenamientoMapper;
 import com.clubesycarreraspopulares.clubescarreras.repository.EntrenamientoRepository;
+import com.clubesycarreraspopulares.clubescarreras.repository.ClubRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Objects;
@@ -15,81 +21,103 @@ import java.util.Objects;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/entrenamientos")
-@Tag(name = "Entrenamiento", description = "Endpoints para la entidad Entrenamiento")
+@Tag(name = "Entrenamiento", description = "Endpoints para gestionar entrenamientos")
 public class EntrenamientoController {
 
     private final EntrenamientoRepository entrenamientoRepository;
+    private final ClubRepository clubRepository;
+    private final EntrenamientoMapper entrenamientoMapper;
 
-    /** Listar todos los entrenamientos */
-    @Operation(summary = "Listar todos")
+    @Operation(summary = "Listar todos los entrenamientos")
     @GetMapping
-    public ResponseEntity<List<EntrenamientoEntity>> obtenerTodosLosEntrenamientos() {
-        return ResponseEntity.ok(entrenamientoRepository.findAll());
+    public ResponseEntity<List<EntrenamientoResponse>> obtenerTodos() {
+        List<EntrenamientoResponse> response = entrenamientoRepository.findAll()
+                .stream()
+                .map(entrenamientoMapper::fromEntityToDTO)
+                .toList();
+        return ResponseEntity.ok(response);
     }
 
-    /** Obtener un entrenamiento por ID */
-    @Operation(summary = "Obtener por id")
-    @GetMapping("/{idEntrenamiento}")
-    public ResponseEntity<EntrenamientoEntity> obtenerEntrenamientoById(@PathVariable Integer idEntrenamiento) {
-        EntrenamientoEntity entrenamiento = entrenamientoRepository.findById(idEntrenamiento).orElse(null);
-        if (Objects.isNull(entrenamiento)) {
+    @Operation(summary = "Obtener un entrenamiento por ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<EntrenamientoResponse> obtenerPorId(@PathVariable Integer id) {
+        EntrenamientoEntity ent = entrenamientoRepository.findById(id).orElse(null);
+        if (Objects.isNull(ent)) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(entrenamiento);
+        return ResponseEntity.ok(entrenamientoMapper.fromEntityToDTO(ent));
     }
 
-    /** Crear un nuevo entrenamiento */
-    @Operation(summary = "Crear")
+    @Operation(summary = "Crear un nuevo entrenamiento")
     @PostMapping
-    public ResponseEntity<EntrenamientoEntity> añadirEntrenamiento(@RequestBody EntrenamientoEntity entrenamiento) {
-        entrenamiento.setIdEntrenamiento(null);
-        EntrenamientoEntity saved = entrenamientoRepository.save(entrenamiento);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<EntrenamientoResponse> crear(@RequestBody EntrenamientoRequest request) {
+        ClubEntity club = clubRepository.findById(request.getClubId()).orElse(null);
+        if (Objects.isNull(club)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El club no existe.");
+        }
+
+        EntrenamientoEntity toSave = entrenamientoMapper.fromDtoRequestToEntity(request);
+        toSave.setClub(club);
+
+        EntrenamientoEntity saved = entrenamientoRepository.save(toSave);
+        return ResponseEntity.status(HttpStatus.CREATED).body(entrenamientoMapper.fromEntityToDTO(saved));
     }
 
-    /** Actualizar un entrenamiento existente */
-    @Operation(summary = "Actualizar por id")
-    @PutMapping("/{idEntrenamiento}")
-    public ResponseEntity<EntrenamientoEntity> actualizarEntrenamiento(@PathVariable Integer idEntrenamiento,
-                                                                       @RequestBody EntrenamientoEntity body) {
-        EntrenamientoEntity entrenamiento = entrenamientoRepository.findById(idEntrenamiento).orElse(null);
-        if (Objects.isNull(entrenamiento)) {
+    @Operation(summary = "Actualizar un entrenamiento existente")
+    @PutMapping("/{id}")
+    public ResponseEntity<EntrenamientoResponse> actualizar(@PathVariable Integer id,
+                                                            @RequestBody EntrenamientoRequest request) {
+        EntrenamientoEntity ent = entrenamientoRepository.findById(id).orElse(null);
+        if (Objects.isNull(ent)) {
             return ResponseEntity.notFound().build();
         }
 
-        entrenamiento.setClub(body.getClub());
-        entrenamiento.setDiaSemana(body.getDiaSemana());
-        entrenamiento.setLugarEntrenamiento(body.getLugarEntrenamiento());
-        entrenamiento.setNivel(body.getNivel());
-        entrenamiento.setDescripcion(body.getDescripcion());
+        if (request.getClubId() != null) {
+            ClubEntity club = clubRepository.findById(request.getClubId()).orElse(null);
+            if (Objects.isNull(club)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El club no existe.");
+            }
+            ent.setClub(club);
+        }
 
-        EntrenamientoEntity updated = entrenamientoRepository.save(entrenamiento);
-        return ResponseEntity.ok(updated);
+        ent.setDiaSemana(request.getDiaSemana());
+        ent.setLugarEntrenamiento(request.getLugarEntrenamiento());
+        ent.setNivel(request.getNivel());
+        ent.setDescripcion(request.getDescripcion());
+
+        EntrenamientoEntity updated = entrenamientoRepository.save(ent);
+        return ResponseEntity.ok(entrenamientoMapper.fromEntityToDTO(updated));
     }
 
-    /** Eliminar un entrenamiento por ID */
-    @Operation(summary = "Eliminar por id")
-    @DeleteMapping("/{idEntrenamiento}")
-    public ResponseEntity<Void> eliminarEntrenamiento(@PathVariable Integer idEntrenamiento) {
-        if (!entrenamientoRepository.existsById(idEntrenamiento)) {
+    @Operation(summary = "Eliminar un entrenamiento por ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+        if (Boolean.FALSE.equals(entrenamientoRepository.existsById(id))) {
             return ResponseEntity.notFound().build();
         }
-        entrenamientoRepository.deleteById(idEntrenamiento);
+        entrenamientoRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
-    /** Buscar entrenamientos por filtros opcionales */
-    @Operation(summary = "Buscar por día de la semana, provincia, municipio o código postal")
+    @Operation(summary = "Buscar entrenamientos por filtros opcionales")
     @GetMapping("/buscar")
-    public ResponseEntity<List<EntrenamientoEntity>> buscarEntrenamiento(
-            @RequestParam(required = false) String diaSemana,
-            @RequestParam(required = false) String provincia,
-            @RequestParam(required = false) String municipio,
-            @RequestParam(required = false) String codigoPostal) {
+    public ResponseEntity<List<EntrenamientoResponse>> buscar(@RequestParam(required = false) Integer clubId,
+                                                               @RequestParam(required = false) String diaSemana,
+                                                               @RequestParam(required = false) String nivel) {
+        List<EntrenamientoEntity> results = entrenamientoRepository.findAll();
 
-        List<EntrenamientoEntity> resultados =
-                entrenamientoRepository.buscarPorFiltros(diaSemana, provincia, municipio, codigoPostal);
+        if (clubId != null) {
+            results = entrenamientoRepository.findByClub_ClubId(clubId);
+        } else if (diaSemana != null) {
+            results = entrenamientoRepository.findByDiaSemanaContainingIgnoreCase(diaSemana);
+        } else if (nivel != null) {
+            results = entrenamientoRepository.findByNivelContainingIgnoreCase(nivel);
+        }
 
-        return ResponseEntity.ok(resultados);
+        List<EntrenamientoResponse> response = results.stream()
+                .map(entrenamientoMapper::fromEntityToDTO)
+                .toList();
+
+        return ResponseEntity.ok(response);
     }
 }

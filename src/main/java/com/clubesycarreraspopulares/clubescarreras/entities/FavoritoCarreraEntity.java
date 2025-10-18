@@ -1,12 +1,16 @@
 package com.clubesycarreraspopulares.clubescarreras.entities;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 @Entity
+@Table(name = "favorito_carrera", schema = "dbo")
 @IdClass(FavoritoCarreraId.class)
-@Table(name = "Favorito_Carrera")
 public class FavoritoCarreraEntity {
 
     @Id

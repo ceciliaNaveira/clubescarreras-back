@@ -1,42 +1,35 @@
 package com.clubesycarreraspopulares.clubescarreras.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore; // <- Import necesario
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 @Entity
-@Table(name = "Entrenamiento")
+@Table(name = "entrenamiento", schema = "dbo")
 public class EntrenamientoEntity {
-
-    public enum Nivel {
-        Iniciación, Intermedio, Avanzado
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_entrenamiento", nullable = false)
-    private Integer idEntrenamiento;
+    @Column(name = "id_entrenamiento", nullable = false, unique = true)
+    private Integer entrenamientoId;
 
     @ManyToOne
     @JoinColumn(name = "id_club", nullable = false)
-    @JsonIgnore // <- Ignoramos la referencia al club al serializar
     private ClubEntity club;
 
-    @Column(name = "dia_semana", nullable = false)
-    private String diaSemana;
+    @Column(name = "dia_semana", nullable = false, length = 20)
+    private String diaSemana; // Lunes, Martes, etc.
 
-    @Column(name = "lugar_entrenamiento", nullable = false)
+    @Column(name = "lugar_entrenamiento", nullable = false, length = 255)
     private String lugarEntrenamiento;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Nivel nivel;
+    @Column(name = "nivel", nullable = false, length = 20)
+    private String nivel; // Iniciación, Intermedio, Avanzado
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "descripcion", columnDefinition = "TEXT")
     private String descripcion;
 }

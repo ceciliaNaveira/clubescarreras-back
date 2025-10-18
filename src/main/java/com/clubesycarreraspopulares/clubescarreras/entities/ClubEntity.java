@@ -1,23 +1,21 @@
 package com.clubesycarreraspopulares.clubescarreras.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.List;
+import lombok.*;
 
 @Data
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 @Entity
-@Table(name = "Club")
+@Table(name = "club", schema = "dbo")
 public class ClubEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_club", nullable = false)
-    private Integer idClub;
+    @Column(name = "id_club", nullable = false, unique = true)
+    private Integer clubId;
 
     @ManyToOne
     @JoinColumn(name = "id_localizacion", nullable = false)
@@ -34,7 +32,4 @@ public class ClubEntity {
 
     @Column(name = "web", length = 255)
     private String web;
-
-    @OneToMany(mappedBy = "club", cascade = CascadeType.ALL)
-    private List<EntrenamientoEntity> entrenamientos;
 }

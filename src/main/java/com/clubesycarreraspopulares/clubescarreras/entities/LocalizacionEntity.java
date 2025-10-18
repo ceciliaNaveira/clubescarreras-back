@@ -1,24 +1,21 @@
 package com.clubesycarreraspopulares.clubescarreras.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.List;
+import lombok.*;
 
 @Data
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 @Entity
-@Table(name = "Localizacion")
+@Table(name = "localizacion", schema = "dbo")
 public class LocalizacionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_localizacion", nullable = false)
-    private Integer idLocalizacion;
+    @Column(name = "id_localizacion", nullable = false, unique = true)
+    private Integer localizacionId;
 
     @Column(name = "provincia", nullable = false, length = 100)
     private String provincia;
@@ -26,20 +23,15 @@ public class LocalizacionEntity {
     @Column(name = "municipio", nullable = false, length = 100)
     private String municipio;
 
-    @Column(name = "codigo_postal", length = 10)
+    @Column(name = "codigo_postal", length = 5)
     private String codigoPostal;
 
     @Column(name = "direccion", length = 255)
     private String direccion;
 
-    @Column(name = "latitud")
+    @Column(name = "latitud", precision = 9, scale = 6)
     private Double latitud;
 
-    @Column(name = "longitud")
+    @Column(name = "longitud", precision = 9, scale = 6)
     private Double longitud;
-
-    // Evitamos referencia circular
-    @OneToMany(mappedBy = "localizacion")
-    @JsonIgnore
-    private List<ClubEntity> clubes;
 }
