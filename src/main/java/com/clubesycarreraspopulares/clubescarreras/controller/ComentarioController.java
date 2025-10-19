@@ -126,20 +126,26 @@ public class ComentarioController {
 
     @Operation(summary = "Buscar comentarios por filtros opcionales")
     @GetMapping("/buscar")
-    public ResponseEntity<List<ComentarioResponse>> buscar(@RequestParam(required = false) Integer usuarioId,
-                                                           @RequestParam(required = false) Integer clubId) {
-        List<ComentarioEntity> results = comentarioRepository.findAll();
+public ResponseEntity<List<ComentarioResponse>> buscar(
+        @RequestParam(required = false) Integer usuarioId,
+        @RequestParam(required = false) Integer clubId) {
 
-        if (usuarioId != null) {
-            results = comentarioRepository.findByUsuario_UsuarioId(usuarioId);
-        } else if (clubId != null) {
-            results = comentarioRepository.findByClub_ClubId(clubId);
-        }
+    List<ComentarioEntity> results;
 
-        List<ComentarioResponse> response = results.stream()
-                .map(comentarioMapper::fromEntityToDTO)
-                .toList();
-
-        return ResponseEntity.ok(response);
+    if (usuarioId != null && clubId != null) {
+        results = comentarioRepository.findByUsuario_UsuarioIdAndClub_ClubId(usuarioId, clubId);
+    } else if (usuarioId != null) {
+        results = comentarioRepository.findByUsuario_UsuarioId(usuarioId);
+    } else if (clubId != null) {
+        results = comentarioRepository.findByClub_ClubId(clubId);
+    } else {
+        results = comentarioRepository.findAll();
     }
+
+    List<ComentarioResponse> response = results.stream()
+            .map(comentarioMapper::fromEntityToDTO)
+            .toList();
+
+    return ResponseEntity.ok(response);
+}
 }
