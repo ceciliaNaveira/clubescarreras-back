@@ -1,5 +1,7 @@
 package com.clubesycarreraspopulares.clubescarreras.entities;
 
+import java.time.LocalTime;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,6 +25,9 @@ public class EntrenamientoEntity {
 
     @Column(name = "dia_semana", nullable = false, length = 20)
     private String diaSemana; // Lunes, Martes, etc.
+
+    @Column(name = "hora", nullable = false)
+    private LocalTime hora; 
 
     @Column(name = "lugar_entrenamiento", nullable = false, length = 255)
     private String lugarEntrenamiento;

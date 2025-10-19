@@ -81,6 +81,7 @@ public class EntrenamientoController {
         }
 
         ent.setDiaSemana(request.getDiaSemana());
+        ent.setHora(request.getHora());
         ent.setLugarEntrenamiento(request.getLugarEntrenamiento());
         ent.setNivel(request.getNivel());
         ent.setDescripcion(request.getDescripcion());
