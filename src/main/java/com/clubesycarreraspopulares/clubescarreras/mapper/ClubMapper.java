@@ -5,7 +5,6 @@ import com.clubesycarreraspopulares.clubescarreras.dto.ClubResponse;
 import com.clubesycarreraspopulares.clubescarreras.entities.ClubEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
 public interface ClubMapper {

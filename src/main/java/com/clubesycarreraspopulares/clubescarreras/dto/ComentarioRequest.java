@@ -2,8 +2,6 @@ package com.clubesycarreraspopulares.clubescarreras.dto;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Data
 public class ComentarioRequest {
     private Integer usuarioId;

@@ -10,39 +10,38 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
 @Entity
-@Table(name = "carrera", schema = "dbo")
+@Table(name = "carrera")
 public class CarreraEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_carrera", nullable = false, unique = true)
+    @Column(name = "id_carrera", nullable = false)
     private Integer carreraId;
 
     @ManyToOne
-    @JoinColumn(name = "id_club")
-    private ClubEntity club; // opcional
+    @JoinColumn(name = "id_club", nullable = false)
+    private ClubEntity club;
 
     @ManyToOne
     @JoinColumn(name = "id_localizacion", nullable = false)
     private LocalizacionEntity localizacion;
 
-    @Column(name = "nombre", nullable = false, length = 150)
+    @Column(name = "nombre", nullable = false)
     private String nombre;
 
-    @Column(name = "descripcion", columnDefinition = "TEXT")
+    @Column(name = "descripcion")
     private String descripcion;
 
-    @Column(name = "fecha", nullable = false)
+    @Column(name = "fecha")
     private LocalDate fecha;
 
     @Column(name = "distancia_km", precision = 5, scale = 2)
     private BigDecimal distanciaKm;
 
-    @Column(name = "web_oficial", length = 255)
+    @Column(name = "web_oficial")
     private String webOficial;
 
-    @Column(name = "poster_url", length = 255)
+    @Column(name = "poster_url")
     private String posterUrl;
 }

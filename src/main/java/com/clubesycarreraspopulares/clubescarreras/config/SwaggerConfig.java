@@ -12,7 +12,7 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Swagger Proyecto FCT Cecilia Naveira")
+                        .title("Swagger Proyecto final de ciclo, Cecilia Naveira")
                         .version("1.0")
                         .description("Endpoints organizados por tags, necesarios para la funcionalidad del backend"));
     }

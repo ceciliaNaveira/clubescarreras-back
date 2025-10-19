@@ -1,34 +1,33 @@
 package com.clubesycarreraspopulares.clubescarreras.entities;
 
-import java.math.BigDecimal;
-
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
 @Entity
-@Table(name = "localizacion", schema = "dbo")
+@Table(name = "localizacion")
 public class LocalizacionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_localizacion", nullable = false, unique = true)
+    @Column(name = "id_localizacion", nullable = false)
     private Integer localizacionId;
 
-    @Column(name = "provincia", nullable = false, length = 100)
+    @Column(name = "provincia", nullable = false)
     private String provincia;
 
-    @Column(name = "municipio", nullable = false, length = 100)
+    @Column(name = "municipio", nullable = false)
     private String municipio;
 
     @Column(name = "codigo_postal", length = 5)
     private String codigoPostal;
 
-    @Column(name = "direccion", length = 255)
+    @Column(name = "direccion")
     private String direccion;
 
     @Column(name = "latitud", precision = 9, scale = 6)
