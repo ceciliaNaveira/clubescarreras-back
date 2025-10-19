@@ -1,5 +1,7 @@
 package com.clubesycarreraspopulares.clubescarreras.entities;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,8 +32,8 @@ public class LocalizacionEntity {
     private String direccion;
 
     @Column(name = "latitud", precision = 9, scale = 6)
-    private Double latitud;
+    private BigDecimal latitud;
 
     @Column(name = "longitud", precision = 9, scale = 6)
-    private Double longitud;
+    private BigDecimal longitud;
 }

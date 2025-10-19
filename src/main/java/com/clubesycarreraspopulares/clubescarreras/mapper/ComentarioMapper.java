@@ -9,8 +9,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface ComentarioMapper {
 
-    @Mapping(source = "usuarioId", target = "usuario") // se asigna en controller
-    @Mapping(source = "clubId", target = "club")       // se asigna en controller
+    @Mapping(source = "usuarioId", target = "usuario.usuarioId") // se asigna en controller
+    @Mapping(source = "clubId", target = "club.clubId")       // se asigna en controller
     ComentarioEntity fromDtoRequestToEntity(ComentarioRequest request);
 
     @Mapping(source = "comentarioId", target = "comentarioId")

@@ -10,8 +10,8 @@ import org.mapstruct.Mapping;
 public interface CarreraMapper {
 
     // DTO -> Entity
-    @Mapping(source = "clubId", target = "club") // se asignará manualmente en el controller
-    @Mapping(source = "localizacionId", target = "localizacion") // se asignará manualmente en el controller
+    @Mapping(source = "clubId", target = "club.clubId") // se asignará manualmente en el controller
+    @Mapping(source = "localizacionId", target = "localizacion.localizacionId") // se asignará manualmente en el controller
     CarreraEntity fromDtoRequestToEntity(CarreraRequest request);
 
     // Entity -> DTO
@@ -29,4 +29,3 @@ public interface CarreraMapper {
     @Mapping(source = "posterUrl", target = "posterUrl")
     CarreraResponse fromEntityToDTO(CarreraEntity entity);
 }
-

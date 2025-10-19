@@ -3,6 +3,7 @@ package com.clubesycarreraspopulares.clubescarreras.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -37,7 +38,7 @@ public class CarreraEntity {
     private LocalDate fecha;
 
     @Column(name = "distancia_km", precision = 5, scale = 2)
-    private Double distanciaKm;
+    private BigDecimal distanciaKm;
 
     @Column(name = "web_oficial", length = 255)
     private String webOficial;

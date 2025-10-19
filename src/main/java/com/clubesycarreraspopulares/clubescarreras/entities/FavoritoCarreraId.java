@@ -1,14 +1,13 @@
 package com.clubesycarreraspopulares.clubescarreras.entities;
 
+import java.io.Serializable;
 import lombok.*;
 
-import java.io.Serializable;
-
-@Data
+@Data           // genera getters, setters, equals, hashCode y toString
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
 public class FavoritoCarreraId implements Serializable {
+    private Integer favoritoCarreraId;
     private Integer usuario;
     private Integer carrera;
 }

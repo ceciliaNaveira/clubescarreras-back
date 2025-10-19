@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -72,6 +73,9 @@ public class CarreraController {
         toSave.setLocalizacion(localizacion);
         toSave.setClub(club);
 
+        if (request.getDistanciaKm() != null)
+            toSave.setDistanciaKm(BigDecimal.valueOf(request.getDistanciaKm()));
+
         CarreraEntity saved = carreraRepository.save(toSave);
         return ResponseEntity.status(HttpStatus.CREATED).body(carreraMapper.fromEntityToDTO(saved));
     }
@@ -106,7 +110,7 @@ public class CarreraController {
         carrera.setNombre(request.getNombre());
         carrera.setDescripcion(request.getDescripcion());
         carrera.setFecha(request.getFecha());
-        carrera.setDistanciaKm(request.getDistanciaKm());
+        carrera.setDistanciaKm(request.getDistanciaKm() != null ? BigDecimal.valueOf(request.getDistanciaKm()) : null);
         carrera.setWebOficial(request.getWebOficial());
         carrera.setPosterUrl(request.getPosterUrl());
 
