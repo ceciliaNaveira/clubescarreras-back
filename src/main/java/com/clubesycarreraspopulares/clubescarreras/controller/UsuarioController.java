@@ -115,4 +115,21 @@ public class UsuarioController {
         usuarioRepository.deleteById(idUsuario);
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(summary = "Login de usuario")
+    @PostMapping("/login")
+    public ResponseEntity<UsuarioResponse> login(@RequestBody UsuarioRequest loginRequest) {
+        if (loginRequest.getEmail() == null || loginRequest.getContraseña() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email y contraseña son obligatorios");
+        }
+
+        UsuarioEntity usuario = usuarioRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email o contraseña incorrectos"));
+
+        if (!passwordEncoder.matches(loginRequest.getContraseña(), usuario.getContraseña())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email o contraseña incorrectos");
+        }
+
+        return ResponseEntity.ok(usuarioMapper.fromEntityToDTO(usuario));
+    }
 }
