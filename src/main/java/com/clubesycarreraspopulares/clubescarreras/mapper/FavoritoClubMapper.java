@@ -17,5 +17,6 @@ public interface FavoritoClubMapper {
     @Mapping(source = "usuario.nombre", target = "usuarioNombre")
     @Mapping(source = "club.clubId", target = "clubId")
     @Mapping(source = "club.nombre", target = "clubNombre")
+    @Mapping(source = "club.descripcion", target = "clubDescripcion")
     FavoritoClubResponse fromEntityToDTO(FavoritoClubEntity entity);
 }

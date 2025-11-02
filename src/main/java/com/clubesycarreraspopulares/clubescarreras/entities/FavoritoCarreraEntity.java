@@ -3,25 +3,23 @@ package com.clubesycarreraspopulares.clubescarreras.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
+@Builder
+@IdClass(FavoritoCarreraId.class)
 @Entity
 @Table(name = "favorito_carrera")
-@IdClass(FavoritoCarreraId.class)
-public class FavoritoCarreraEntity {
+public class FavoritoCarreraEntity implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_favorito_carrera", nullable = false, unique = true)
-    private Integer favoritoCarreraId;
-
     @ManyToOne
     @JoinColumn(name = "id_usuario", nullable = false)
     private UsuarioEntity usuario;
 
+    @Id
     @ManyToOne
     @JoinColumn(name = "id_carrera", nullable = false)
     private CarreraEntity carrera;

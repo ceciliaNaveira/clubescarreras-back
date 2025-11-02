@@ -40,17 +40,18 @@ public class FavoritoClubController {
     @Operation(summary = "Agregar un club a favoritos")
     @PostMapping
     public ResponseEntity<FavoritoClubResponse> agregarFavorito(@RequestBody FavoritoClubRequest request) {
-        UsuarioEntity usuario = usuarioRepository.findById(request.getUsuarioId()).orElse(null);
-        ClubEntity club = clubRepository.findById(request.getClubId()).orElse(null);
+        UsuarioEntity usuario = usuarioRepository.findById(request.getUsuarioId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "El usuario no existe."));
+        ClubEntity club = clubRepository.findById(request.getClubId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "El club no existe."));
 
-        if (Objects.isNull(usuario)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El usuario no existe.");
-        }
-        if (Objects.isNull(club)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El club no existe.");
+        // Verifica si ya existe para evitar duplicado
+        FavoritoClubId id = new FavoritoClubId(usuario.getUsuarioId(), club.getClubId());
+        if (favoritoClubRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "El club ya está en favoritos");
         }
 
-        FavoritoClubEntity entity = favoritoClubMapper.fromDtoRequestToEntity(request);
+        FavoritoClubEntity entity = new FavoritoClubEntity();
         entity.setUsuario(usuario);
         entity.setClub(club);
 

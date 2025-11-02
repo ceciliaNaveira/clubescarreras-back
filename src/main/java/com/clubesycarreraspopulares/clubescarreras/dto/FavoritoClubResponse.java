@@ -8,5 +8,6 @@ public class FavoritoClubResponse {
     private String usuarioNombre;
     private Integer clubId;
     private String clubNombre;
+    private String clubDescripcion;
 }
 

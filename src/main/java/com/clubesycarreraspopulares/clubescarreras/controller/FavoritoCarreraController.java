@@ -6,6 +6,8 @@ import com.clubesycarreraspopulares.clubescarreras.entities.UsuarioEntity;
 import com.clubesycarreraspopulares.clubescarreras.repository.CarreraRepository;
 import com.clubesycarreraspopulares.clubescarreras.repository.FavoritoCarreraRepository;
 import com.clubesycarreraspopulares.clubescarreras.repository.UsuarioRepository;
+import com.clubesycarreraspopulares.clubescarreras.dto.FavoritoCarreraResponse;
+import com.clubesycarreraspopulares.clubescarreras.mapper.FavoritoCarreraMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
@@ -26,6 +28,7 @@ public class FavoritoCarreraController {
     private final FavoritoCarreraRepository favoritoRepository;
     private final UsuarioRepository usuarioRepository;
     private final CarreraRepository carreraRepository;
+    private final FavoritoCarreraMapper favoritoCarreraMapper;
 
     @Operation(summary = "Listar todos los favoritos de carrera")
     @GetMapping
@@ -36,41 +39,41 @@ public class FavoritoCarreraController {
 
     @Operation(summary = "Agregar una carrera a favoritos")
     @PostMapping
-    public ResponseEntity<FavoritoCarreraEntity> agregarFavorito(@RequestParam Integer usuarioId,
-                                                                 @RequestParam Integer carreraId) {
-        UsuarioEntity usuario = usuarioRepository.findById(usuarioId).orElse(null);
-        CarreraEntity carrera = carreraRepository.findById(carreraId).orElse(null);
+    public ResponseEntity<FavoritoCarreraResponse> agregarFavorito(@RequestParam Integer usuarioId,
+                                                                   @RequestParam Integer carreraId) {
 
-        if (Objects.isNull(usuario)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El usuario no existe.");
-        }
-        if (Objects.isNull(carrera)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La carrera no existe.");
+        UsuarioEntity usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuario no encontrado"));
+
+        CarreraEntity carrera = carreraRepository.findById(carreraId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Carrera no encontrada"));
+
+        if (favoritoRepository.existsByUsuario_UsuarioIdAndCarrera_CarreraId(usuarioId, carreraId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Favorito ya existe");
         }
 
-        FavoritoCarreraEntity entity = FavoritoCarreraEntity.builder()
+        FavoritoCarreraEntity favorito = FavoritoCarreraEntity.builder()
                 .usuario(usuario)
                 .carrera(carrera)
                 .build();
 
-        FavoritoCarreraEntity saved = favoritoRepository.save(entity);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        FavoritoCarreraEntity saved = favoritoRepository.save(favorito);
+        FavoritoCarreraResponse response = favoritoCarreraMapper.fromEntityToDTO(saved);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Operation(summary = "Eliminar un favorito de carrera")
     @DeleteMapping
     public ResponseEntity<Void> eliminarFavorito(@RequestParam Integer usuarioId,
                                                  @RequestParam Integer carreraId) {
-        List<FavoritoCarreraEntity> favoritos = favoritoRepository.findByUsuario_UsuarioId(usuarioId)
-                .stream()
+
+        FavoritoCarreraEntity favorito = favoritoRepository.findByUsuario_UsuarioId(usuarioId).stream()
                 .filter(f -> Objects.equals(f.getCarrera().getCarreraId(), carreraId))
-                .toList();
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Favorito no encontrado"));
 
-        if (favoritos.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        favoritos.forEach(favoritoRepository::delete);
+        favoritoRepository.delete(favorito);
         return ResponseEntity.noContent().build();
     }
 
