@@ -9,7 +9,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface EntrenamientoMapper {
 
-    @Mapping(source = "clubId", target = "club.clubId") // se asigna en el controller
+    @Mapping(source = "clubId", target = "club.clubId")
     @Mapping(source = "hora", target = "hora") 
     EntrenamientoEntity fromDtoRequestToEntity(EntrenamientoRequest request);
 

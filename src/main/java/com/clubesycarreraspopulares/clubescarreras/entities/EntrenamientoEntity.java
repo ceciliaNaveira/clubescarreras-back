@@ -24,7 +24,7 @@ public class EntrenamientoEntity {
     private ClubEntity club;
 
     @Column(name = "dia_semana", nullable = false, length = 20)
-    private String diaSemana; // Lunes, Martes, etc.
+    private String diaSemana; 
 
     @Column(name = "hora", nullable = false)
     private LocalTime hora; 
@@ -33,7 +33,7 @@ public class EntrenamientoEntity {
     private String lugarEntrenamiento;
 
     @Column(name = "nivel", nullable = false, length = 20)
-    private String nivel; // Iniciación, Intermedio, Avanzado
+    private String nivel;
 
     @Column(name = "descripcion", columnDefinition = "TEXT")
     private String descripcion;

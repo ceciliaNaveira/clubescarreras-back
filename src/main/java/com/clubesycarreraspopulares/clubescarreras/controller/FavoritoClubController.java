@@ -45,7 +45,6 @@ public class FavoritoClubController {
         ClubEntity club = clubRepository.findById(request.getClubId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "El club no existe."));
 
-        // Verifica si ya existe para evitar duplicado
         FavoritoClubId id = new FavoritoClubId(usuario.getUsuarioId(), club.getClubId());
         if (favoritoClubRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "El club ya está en favoritos");

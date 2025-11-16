@@ -57,18 +57,14 @@ public class UsuarioController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El campo 'rolId' es obligatorio.");
         }
 
-        // Buscamos el Rol manualmente
         RolEntity rol = rolRepository.findById(usuarioRequest.getRolId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "El rol con id=" + usuarioRequest.getRolId() + " no existe."));
 
-        // Mapeamos el resto de campos con MapStruct
         UsuarioEntity toSave = usuarioMapper.fromDtoRequestToEntity(usuarioRequest);
 
-        // Asignamos el rol manualmente
         toSave.setRol(rol);
 
-        // Codificamos la contraseña si llega
         if (!Objects.isNull(usuarioRequest.getContraseña())) {
             toSave.setContraseña(passwordEncoder.encode(usuarioRequest.getContraseña()));
         }
@@ -86,7 +82,6 @@ public class UsuarioController {
             return ResponseEntity.notFound().build();
         }
 
-        // Actualizamos el rol si llega
         if (!Objects.isNull(usuarioRequest.getRolId())) {
             RolEntity nuevoRol = rolRepository.findById(usuarioRequest.getRolId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -94,7 +89,6 @@ public class UsuarioController {
             usuario.setRol(nuevoRol);
         }
 
-        // Actualizamos otros campos
         usuario.setNombre(usuarioRequest.getNombre());
         usuario.setEmail(usuarioRequest.getEmail());
 

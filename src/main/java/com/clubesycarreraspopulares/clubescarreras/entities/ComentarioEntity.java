@@ -34,5 +34,5 @@ public class ComentarioEntity {
     private LocalDateTime fecha;
 
     @Column(name = "valoracion", nullable = false)
-    private Integer valoracion; // 1 a 5
+    private Integer valoracion; 
 }

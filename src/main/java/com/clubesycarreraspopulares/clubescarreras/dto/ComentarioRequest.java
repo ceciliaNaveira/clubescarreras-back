@@ -7,5 +7,5 @@ public class ComentarioRequest {
     private Integer usuarioId;
     private Integer clubId;
     private String texto;
-    private Integer valoracion; // 1 a 5
+    private Integer valoracion; 
 }

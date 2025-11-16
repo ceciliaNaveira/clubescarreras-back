@@ -9,8 +9,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface FavoritoCarreraMapper {
 
-    @Mapping(source = "usuarioId", target = "usuario.usuarioId") // se asigna en controller
-    @Mapping(source = "carreraId", target = "carrera.carreraId") // se asigna en controller
+    @Mapping(source = "usuarioId", target = "usuario.usuarioId") 
+    @Mapping(source = "carreraId", target = "carrera.carreraId")
     FavoritoCarreraEntity fromDtoRequestToEntity(FavoritoCarreraRequest request);
 
     @Mapping(source = "usuario.usuarioId", target = "usuarioId")

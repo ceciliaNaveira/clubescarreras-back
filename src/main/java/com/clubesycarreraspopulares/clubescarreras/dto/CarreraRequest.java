@@ -6,8 +6,8 @@ import java.time.LocalDate;
 
 @Data
 public class CarreraRequest {
-    private Integer clubId; // opcional
-    private Integer localizacionId; // obligatorio
+    private Integer clubId;
+    private Integer localizacionId; 
     private String nombre;
     private String descripcion;
     private LocalDate fecha;
